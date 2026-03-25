@@ -6,7 +6,7 @@ class Result(msgspec.Struct):
     message: str
     result: Any
     status_code: int
-
+    
 class Error(msgspec.Struct):
     code: str
     message: str
