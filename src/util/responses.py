@@ -9,6 +9,17 @@ from sqlalchemy.orm import Session
 import msgspec
 
 SENSITIVE_KEYS = {"password_hash", "password"}
+COMMA_SEPARATED_FIELDS = {"flags", "roles"}
+
+def _deserialize_comma_separated(field_name: str, value: str) -> list[str] | str:
+    """Convert comma-separated string fields into lists for specific known fields.
+    
+    Only deserializes recognized fields to avoid splitting content bodies.
+    """
+    if field_name in COMMA_SEPARATED_FIELDS and isinstance(value, str):
+        # Split and strip whitespace, filter out empty strings
+        return [item.strip() for item in value.split(",") if item.strip()]
+    return value
 
 async def handle_response(result_head: str | None, response: Error | Result) -> JSONResponse:
     """Returns a JSON response with the response data returned from the core"""
@@ -19,7 +30,7 @@ async def handle_response(result_head: str | None, response: Error | Result) -> 
         result_head, response.result, status_code=response.status_code or 200,
         code=response.code, message=response.message)
         
-async def handle_request(request_head: str | None, targetClass, targetServiceFunction, **kwargs):
+async def handle_request(request_head: str | None, current_user: dict | None, targetClass, targetServiceFunction, **kwargs):
     """
     Generic handler for API requests.
     
@@ -36,9 +47,9 @@ async def handle_request(request_head: str | None, targetClass, targetServiceFun
     try:
         if targetClass:
             request = targetClass(**kwargs)
-            result = await targetServiceFunction(request)
+            result = await targetServiceFunction(request, acting_user=current_user) if current_user else await targetServiceFunction(request)
         else:
-            result = await targetServiceFunction(**kwargs)
+            result = await targetServiceFunction(**kwargs, acting_user=current_user) if current_user else await targetServiceFunction(**kwargs)
     except Exception as exc:
         print("Error:", str(exc))
         return await error_response("REQUEST_FAILED", str(exc), status_code=500)
@@ -65,7 +76,13 @@ async def make_serializable(obj: Any) -> Any:
     elif isinstance(obj, Enum):
         return obj.value
     elif isinstance(obj, dict):
-        return {k: await make_serializable(v) for k, v in obj.items()}
+        result_dict = {}
+        for k, v in obj.items():
+            # First deserialize comma-separated fields into lists
+            v = _deserialize_comma_separated(k, v)
+            # Then recursively serialize the value
+            result_dict[k] = await make_serializable(v)
+        return result_dict
     elif isinstance(obj, (list, tuple)):
         return [await make_serializable(item) for item in obj]
     elif isinstance(obj, msgspec.Struct):

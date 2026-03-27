@@ -17,7 +17,7 @@ class NoteRepository:
             title: str | None = None,
             title_contains: str | None = None,
             content_contains: str | None = None,
-            tag: str | None = None,
+            flags: str | None = None,
             ):
             query = self.db.query(NoteModel)
 
@@ -31,8 +31,8 @@ class NoteRepository:
                 query = query.filter(NoteModel.title.contains(title_contains))
             if content_contains is not None:
                 query = query.filter(NoteModel.content.contains(content_contains))
-            if tag is not None:
-                query = query.filter(NoteModel.flags.contains(tag))
+            if flags is not None:
+                query = query.filter(NoteModel.flags.contains(flags))
 
             return query.offset(offset).limit(limit).all()
 

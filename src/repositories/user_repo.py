@@ -9,6 +9,12 @@ class UserRepository:
     async def get(self, user_id: int):
         return self.db.query(UserModel).filter(UserModel.id == user_id).first()        
 
+    async def get_by_username(self, username: str):
+        return self.db.query(UserModel).filter(UserModel.username == username).first()
+    
+    async def get_by_email(self, email: str):
+        return self.db.query(UserModel).filter(UserModel.email == email).first()
+
     async def query(
             self,
             offset: int = 0,

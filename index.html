@@ -1,0 +1,1268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notes App</title>
+    <style>
+        :root {
+            --bg-main: #090b12;
+            --bg-panel: #101525;
+            --bg-card: #141a2e;
+            --bg-card-soft: #1a223d;
+            --text-main: #e6ecff;
+            --text-muted: #97a6d4;
+            --border-soft: #2a3864;
+            --accent: #4fa3ff;
+            --accent-2: #7f5dff;
+            --success: #2ad18b;
+            --danger: #ff5f73;
+            --warning: #ffb84d;
+        }
+
+        html, body {
+            height: 100%;
+            overflow: hidden;
+            overscroll-behavior: none;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: radial-gradient(circle at 10% 10%, #111a34 0%, var(--bg-main) 45%);
+            color: var(--text-main);
+            height: 100dvh;
+            padding: 16px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            text-align: center;
+            color: var(--text-main);
+            margin-bottom: 14px;
+            flex: 0 0 auto;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px rgba(79, 163, 255, 0.24);
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            flex: 1 1 auto;
+            min-height: 0;
+        }
+
+        .card {
+            background: linear-gradient(180deg, var(--bg-card) 0%, var(--bg-panel) 100%);
+            border-radius: 8px;
+            border: 1px solid var(--border-soft);
+            box-shadow: 0 0 0 1px rgba(79, 163, 255, 0.04), 0 0 14px rgba(79, 163, 255, 0.08);
+            padding: 30px;
+            min-height: 0;
+            overflow-y: auto;
+        }
+
+        .card h2 {
+            color: var(--text-main);
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            border-bottom: 2px solid var(--accent);
+            padding-bottom: 10px;
+            text-shadow: 0 0 6px rgba(79, 163, 255, 0.14);
+        }
+
+        .login-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .checkbox-row {
+            flex-direction: row;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .checkbox-row input[type="checkbox"] {
+            width: auto;
+            margin: 0;
+            accent-color: var(--accent);
+        }
+
+        label {
+            color: var(--text-muted);
+            font-weight: 500;
+            font-size: 0.9em;
+        }
+
+        input, textarea {
+            padding: 10px;
+            border: 1px solid var(--border-soft);
+            border-radius: 4px;
+            font-size: 1em;
+            background: var(--bg-card-soft);
+            color: var(--text-main);
+            transition: border-color 0.3s;
+        }
+
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(79, 163, 255, 0.16), 0 0 10px rgba(79, 163, 255, 0.16);
+        }
+
+        button {
+            padding: 12px 24px;
+            background: linear-gradient(180deg, var(--accent), #3f8fe8);
+            color: #f5f8ff;
+            border: none;
+            border-radius: 4px;
+            font-size: 1em;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.3s;
+            box-shadow: 0 0 8px rgba(79, 163, 255, 0.16);
+        }
+
+        button:hover {
+            background: linear-gradient(180deg, #66b2ff, #4b9cf3);
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .auth-section {
+            display: none;
+        }
+
+        .auth-section.active {
+            display: block;
+        }
+
+        .login-section {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .auth-toggle {
+            text-align: center;
+            font-size: 0.9em;
+            color: var(--text-muted);
+        }
+
+        .auth-toggle button {
+            background: none;
+            color: #87c2ff;
+            padding: 0;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: underline;
+            box-shadow: none;
+        }
+
+        .message {
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            display: none;
+        }
+
+        .message.show {
+            display: block;
+        }
+
+        .message.error {
+            background: rgba(255, 95, 115, 0.16);
+            color: #ffc4cc;
+            border-left: 4px solid var(--danger);
+        }
+
+        .message.success {
+            background: rgba(42, 209, 139, 0.14);
+            color: #c8ffe7;
+            border-left: 4px solid var(--success);
+        }
+
+        .note-item {
+            background: #101934;
+            border-left: 4px solid var(--accent);
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+            box-shadow: 0 0 10px rgba(79, 163, 255, 0.06);
+        }
+
+        .note-item.private {
+            background: #2a2012;
+            border-left-color: var(--warning);
+            box-shadow: 0 0 10px rgba(255, 184, 77, 0.1);
+        }
+
+        .note-item.admin-note {
+            background: #10281f;
+            border-left-color: #31c98a;
+        }
+
+        .note-item.owner-note {
+            background: #31161c;
+            border-left-color: #ff5f73;
+        }
+
+        .note-private-pill {
+            display: inline-block;
+            margin-left: 8px;
+            padding: 2px 8px;
+            border-radius: 999px;
+            background: var(--warning);
+            color: #fff;
+            font-size: 0.72em;
+            vertical-align: middle;
+            box-shadow: 0 0 8px rgba(255, 184, 77, 0.28);
+        }
+
+        .note-role-pill {
+            display: inline-block;
+            margin-left: 8px;
+            padding: 2px 8px;
+            border-radius: 999px;
+            color: #fff;
+            font-size: 0.72em;
+            vertical-align: middle;
+        }
+
+        .note-role-pill.admin {
+            background: #31c98a;
+            box-shadow: 0 0 8px rgba(49, 201, 138, 0.25);
+        }
+
+        .note-role-pill.owner {
+            background: #ff5f73;
+            box-shadow: 0 0 8px rgba(255, 95, 115, 0.24);
+        }
+
+        .note-item h4 {
+            color: var(--text-main);
+            margin-bottom: 5px;
+        }
+
+        .note-item p {
+            color: #cfdbff;
+            margin-bottom: 10px;
+            line-height: 1.5;
+        }
+
+        .note-meta {
+            font-size: 0.85em;
+            color: var(--text-muted);
+        }
+
+        .notes-list {
+            max-height: 500px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+
+        .note-actions {
+            margin-top: 10px;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .danger-btn {
+            background: linear-gradient(180deg, #ff5f73, #d94257);
+            box-shadow: 0 0 8px rgba(255, 95, 115, 0.2);
+        }
+
+        .danger-btn:hover {
+            background: linear-gradient(180deg, #ff7f90, #ef596d);
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .user-info {
+            background: #0f1630;
+            border: 1px solid var(--border-soft);
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            display: none;
+        }
+
+        .user-info.show {
+            display: block;
+        }
+
+        .user-info p {
+            margin: 5px 0;
+            color: #d9e4ff;
+        }
+
+        .logout-btn {
+            background: linear-gradient(180deg, var(--accent-2), #6d47e0);
+            margin-top: 15px;
+            width: 100%;
+            box-shadow: 0 0 9px rgba(127, 93, 255, 0.2);
+        }
+
+        textarea {
+            min-height: 120px;
+            resize: vertical;
+            font-family: inherit;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            padding: 8px 12px;
+            border: 1px solid var(--border-soft);
+            border-radius: 6px;
+            background: #111931;
+            color: var(--text-main);
+            cursor: pointer;
+            font-size: 0.92em;
+            box-shadow: none;
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(180deg, var(--accent), #3f8fe8);
+            border-color: var(--accent);
+            color: #fff;
+            box-shadow: 0 0 8px rgba(79, 163, 255, 0.22);
+        }
+
+        .tab-panel {
+            display: none;
+        }
+
+        .tab-panel.active {
+            display: block;
+        }
+
+        .user-card {
+            border: 1px solid var(--border-soft);
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 12px;
+            background: #121a33;
+        }
+
+        .user-card p {
+            margin: 4px 0;
+            color: #d9e4ff;
+            font-size: 0.9em;
+        }
+
+        .user-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+
+        .small-input {
+            padding: 8px;
+            border: 1px solid var(--border-soft);
+            border-radius: 4px;
+            width: 100%;
+            background: var(--bg-card-soft);
+            color: var(--text-main);
+        }
+
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: #4a5b8e #111931;
+        }
+
+        *::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+
+        *::-webkit-scrollbar-track {
+            background: #111931;
+        }
+
+        *::-webkit-scrollbar-thumb {
+            background: #4a5b8e;
+            border-radius: 10px;
+            border: 2px solid #111931;
+        }
+
+        *::-webkit-scrollbar-thumb:hover {
+            background: #5f74b2;
+        }
+
+        @media (max-width: 768px) {
+            html, body {
+                overflow: auto;
+            }
+
+            body {
+                height: auto;
+                min-height: 100dvh;
+            }
+
+            .container {
+                height: auto;
+            }
+
+            .main-content {
+                grid-template-columns: 1fr;
+                min-height: auto;
+            }
+
+            .header h1 {
+                font-size: 1.8em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📝 Notes App</h1>
+            <p>A simple note-taking application</p>
+        </div>
+
+        <div class="main-content">
+            <!-- Left: Authentication -->
+            <div class="card">
+                <div class="auth-section active" id="loginSection">
+                    <h2>Login</h2>
+                    <div class="message" id="loginMessage"></div>
+                    <form class="login-form" id="loginForm">
+                        <div class="form-group">
+                            <label for="loginUsername">Username or Email</label>
+                            <input type="text" id="loginUsername" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="loginPassword">Password</label>
+                            <input type="password" id="loginPassword" required>
+                        </div>
+                        <button type="submit">Login</button>
+                    </form>
+                    <div class="auth-toggle">
+                        Don't have an account? <button type="button" id="switchToSignup">Sign Up</button>
+                    </div>
+                </div>
+
+                <div class="auth-section" id="signupSection">
+                    <h2>Sign Up</h2>
+                    <div class="message" id="signupMessage"></div>
+                    <form class="login-form" id="signupForm">
+                        <div class="form-group">
+                            <label for="signupUsername">Username</label>
+                            <input type="text" id="signupUsername" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="signupEmail">Email</label>
+                            <input type="email" id="signupEmail" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="signupPassword">Password</label>
+                            <input type="password" id="signupPassword" required>
+                        </div>
+                        <button type="submit">Sign Up</button>
+                    </form>
+                    <div class="auth-toggle">
+                        Already have an account? <button type="button" id="switchToLogin">Login</button>
+                    </div>
+                </div>
+
+                <div class="auth-section" id="userSection">
+                    <h2>Account</h2>
+                    <div class="user-info" id="userInfo"></div>
+                    <button class="logout-btn" id="logoutBtn">Logout</button>
+                </div>
+            </div>
+
+            <!-- Right: Notes Section -->
+            <div class="card">
+                <div id="authenticatedSection" class="hidden">
+                    <div class="tabs">
+                        <button class="tab-btn active" id="tabPost" type="button">Post</button>
+                        <button class="tab-btn" id="tabWall" type="button">Note Wall</button>
+                        <button class="tab-btn" id="tabWallOfShame" type="button">Wall of Shame</button>
+                        <button class="tab-btn" id="tabManageUsers" type="button">Manage Users</button>
+                    </div>
+
+                    <div class="message" id="noteMessage"></div>
+
+                    <div class="tab-panel active" id="postPanel">
+                        <h2>Post a Note</h2>
+                        <form class="login-form" id="noteForm">
+                            <div class="form-group">
+                                <label for="noteTitle">Title</label>
+                                <input type="text" id="noteTitle" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="noteContent">Content</label>
+                                <textarea id="noteContent" required></textarea>
+                            </div>
+                            <div class="form-group checkbox-row">
+                                <input type="checkbox" id="notePrivate">
+                                <label for="notePrivate">Private note</label>
+                            </div>
+                            <button type="submit">Post Note</button>
+                        </form>
+                    </div>
+
+                    <div class="tab-panel" id="wallPanel">
+                        <h2>All Notes</h2>
+                        <div class="notes-list" id="notesList"></div>
+                    </div>
+
+                    <div class="tab-panel" id="wallOfShamePanel">
+                        <h2>Wall of Shame</h2>
+                        <div class="notes-list" id="bannedUsersList"></div>
+                    </div>
+
+                    <div class="tab-panel" id="manageUsersPanel">
+                        <h2>Manage Users</h2>
+                        <div class="message" id="adminMessage"></div>
+                        <div id="adminOnlyMessage" class="hidden">
+                            <p style="color:#666;">Admin access is required for user management.</p>
+                        </div>
+                        <div id="usersList"></div>
+                    </div>
+                </div>
+
+                <div id="unauthenticatedSection">
+                    <h2>Please Log In</h2>
+                    <p style="color: #666; margin-top: 20px;">Login or create an account to view and post notes.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = "http://127.0.0.1:8000/api/v1";
+
+        // DOM Elements
+        const loginBtn = document.getElementById("loginForm");
+        const signupBtn = document.getElementById("signupForm");
+        const noteForm = document.getElementById("noteForm");
+        const logoutBtn = document.getElementById("logoutBtn");
+
+        const switchToSignup = document.getElementById("switchToSignup");
+        const switchToLogin = document.getElementById("switchToLogin");
+
+        const loginSection = document.getElementById("loginSection");
+        const signupSection = document.getElementById("signupSection");
+        const userSection = document.getElementById("userSection");
+
+        const authenticatedSection = document.getElementById("authenticatedSection");
+        const unauthenticatedSection = document.getElementById("unauthenticatedSection");
+
+        const loginMessage = document.getElementById("loginMessage");
+        const signupMessage = document.getElementById("signupMessage");
+        const noteMessage = document.getElementById("noteMessage");
+        const adminMessage = document.getElementById("adminMessage");
+        const userInfo = document.getElementById("userInfo");
+        const notesList = document.getElementById("notesList");
+        const usersList = document.getElementById("usersList");
+        const bannedUsersList = document.getElementById("bannedUsersList");
+        const adminOnlyMessage = document.getElementById("adminOnlyMessage");
+        const notePrivate = document.getElementById("notePrivate");
+
+        const tabPost = document.getElementById("tabPost");
+        const tabWall = document.getElementById("tabWall");
+        const tabWallOfShame = document.getElementById("tabWallOfShame");
+        const tabManageUsers = document.getElementById("tabManageUsers");
+        const postPanel = document.getElementById("postPanel");
+        const wallPanel = document.getElementById("wallPanel");
+        const wallOfShamePanel = document.getElementById("wallOfShamePanel");
+        const manageUsersPanel = document.getElementById("manageUsersPanel");
+        const authorProfileCache = new Map();
+
+        function normalizeRoles(input) {
+            if (Array.isArray(input)) {
+                return input.map((r) => String(r).trim()).filter(Boolean);
+            }
+            if (typeof input === "string") {
+                return input.split(",").map((r) => r.trim()).filter(Boolean);
+            }
+            return [];
+        }
+
+        function currentUser() {
+            try {
+                return JSON.parse(localStorage.getItem("user") || "{}");
+            } catch {
+                return {};
+            }
+        }
+
+        function isAdmin() {
+            const roles = normalizeRoles(currentUser().roles);
+            return roles.includes("admin") || roles.includes("owner");
+        }
+
+        function getUserId(obj) {
+            if (!obj || typeof obj !== "object") {
+                return null;
+            }
+            return obj.id ?? obj.user_id ?? null;
+        }
+
+        function getNoteId(note) {
+            if (!note || typeof note !== "object") {
+                return null;
+            }
+            return note.id ?? note.note_id ?? null;
+        }
+
+        function escapeHtml(text) {
+            const value = String(text ?? "");
+            const map = {
+                "&": "&amp;",
+                "<": "&lt;",
+                ">": "&gt;",
+                '"': "&quot;",
+                "'": "&#039;"
+            };
+            return value.replace(/[&<>"']/g, (m) => map[m]);
+        }
+
+        function setActiveTab(tabName) {
+            const tabs = {
+                post: { btn: tabPost, panel: postPanel },
+                wall: { btn: tabWall, panel: wallPanel },
+                wallOfShame: { btn: tabWallOfShame, panel: wallOfShamePanel },
+                users: { btn: tabManageUsers, panel: manageUsersPanel }
+            };
+
+            Object.values(tabs).forEach(({ btn, panel }) => {
+                btn.classList.remove("active");
+                panel.classList.remove("active");
+            });
+
+            tabs[tabName].btn.classList.add("active");
+            tabs[tabName].panel.classList.add("active");
+        }
+
+        // Token management
+        function hasToken() {
+            return !!localStorage.getItem("token");
+        }
+
+        function getToken() {
+            return localStorage.getItem("token");
+        }
+
+        function setToken(token) {
+            localStorage.setItem("token", token);
+        }
+
+        function setStoredUser(user) {
+            localStorage.setItem("user", JSON.stringify(user || {}));
+        }
+
+        function clearToken() {
+            localStorage.removeItem("token");
+            localStorage.removeItem("user");
+        }
+
+        // UI state
+        function showLogin() {
+            loginSection.classList.add("active");
+            signupSection.classList.remove("active");
+            userSection.classList.remove("active");
+        }
+
+        function showSignup() {
+            loginSection.classList.remove("active");
+            signupSection.classList.add("active");
+            userSection.classList.remove("active");
+        }
+
+        function showAuthenticated() {
+            loginSection.classList.remove("active");
+            signupSection.classList.remove("active");
+            userSection.classList.add("active");
+            authenticatedSection.classList.remove("hidden");
+            unauthenticatedSection.classList.add("hidden");
+
+            const user = currentUser();
+            const roles = normalizeRoles(user.roles);
+            userInfo.innerHTML = `
+                <p><strong>Username:</strong> ${escapeHtml(user.username || "N/A")}</p>
+                <p><strong>Email:</strong> ${escapeHtml(user.email || "N/A")}</p>
+                <p><strong>User ID:</strong> ${escapeHtml(getUserId(user) ?? "N/A")}</p>
+                <p><strong>Roles:</strong> ${escapeHtml(roles.join(", ") || "N/A")}</p>
+            `;
+
+            if (isAdmin()) {
+                tabManageUsers.style.display = "inline-block";
+                adminOnlyMessage.classList.add("hidden");
+            } else {
+                tabManageUsers.style.display = "none";
+                adminOnlyMessage.classList.remove("hidden");
+            }
+        }
+
+        function showUnauthenticated() {
+            showLogin();
+            authenticatedSection.classList.add("hidden");
+            unauthenticatedSection.classList.remove("hidden");
+            userInfo.innerHTML = "";
+        }
+
+        function showMessage(element, message, type) {
+            element.textContent = message;
+            element.className = `message show ${type}`;
+            setTimeout(() => element.classList.remove("show"), 5000);
+        }
+
+        function formatValidationDetail(detailList) {
+            if (!Array.isArray(detailList) || detailList.length === 0) {
+                return "Validation failed";
+            }
+
+            const parts = detailList.map((item) => {
+                const loc = Array.isArray(item.loc) ? item.loc[item.loc.length - 1] : "field";
+                const raw = String(item.msg || "Invalid value");
+                const clipped = raw.replace(/^Value error,\s*/i, "");
+                return `${loc}: ${clipped}`;
+            });
+
+            return parts.join(" | ");
+        }
+
+        async function parseApiError(res, fallbackMessage) {
+            let payload = {};
+            try {
+                payload = await res.json();
+            } catch {
+                payload = {};
+            }
+
+            let detail = fallbackMessage;
+            if (Array.isArray(payload.detail)) {
+                detail = formatValidationDetail(payload.detail);
+            } else {
+                detail = payload.info || payload.message || payload.detail || fallbackMessage;
+            }
+
+            const code = payload.code || payload.type || "HTTP_ERROR";
+            return `${res.status} ${res.statusText} | ${code}: ${detail}`;
+        }
+
+        async function apiRequest(path, options = {}, fallbackError = "Request failed") {
+            const headers = options.headers || {};
+            if (hasToken()) {
+                headers.Authorization = `Bearer ${getToken()}`;
+            }
+
+            const response = await fetch(`${API_BASE}${path}`, {
+                ...options,
+                headers
+            });
+
+            if (!response.ok) {
+                throw new Error(await parseApiError(response, fallbackError));
+            }
+
+            if (response.status === 204) {
+                return null;
+            }
+            return response.json();
+        }
+
+        async function fetchCurrentUser() {
+            if (!hasToken()) {
+                return;
+            }
+            const data = await apiRequest("/users/me", { method: "GET" }, "Could not load current user");
+            const user = data.user || {};
+            setStoredUser(user);
+            showAuthenticated();
+        }
+
+        function getNoteDate(note) {
+            return note.posted_at || note.time_written || note.created_at || null;
+        }
+
+        function noteIsPrivate(note) {
+            const flags = Array.isArray(note.flags)
+                ? note.flags
+                : String(note.flags || "").split(",").map((f) => f.trim()).filter(Boolean);
+            return flags.includes("private");
+        }
+
+        function canDeleteNote(note) {
+            const user = currentUser();
+            const myId = Number(getUserId(user));
+            return Number(note.author_id) === myId || isAdmin();
+        }
+
+        async function getAuthorProfile(authorId) {
+            if (!authorId) {
+                return null;
+            }
+
+            const key = String(authorId);
+            if (authorProfileCache.has(key)) {
+                return authorProfileCache.get(key);
+            }
+
+            try {
+                const profileResponse = await apiRequest(
+                    `/users/${authorId}`,
+                    { method: "GET" },
+                    "Failed to load author profile"
+                );
+
+                const user = profileResponse.user || {};
+                const profile = {
+                    username: user.username || `user-${authorId}`,
+                    roles: normalizeRoles(user.roles)
+                };
+                authorProfileCache.set(key, profile);
+                return profile;
+            } catch {
+                // Fall through to username-only endpoint.
+            }
+
+            try {
+                const data = await apiRequest(
+                    `/users/${authorId}/username`,
+                    { method: "GET" },
+                    "Failed to load author username"
+                );
+
+                const username = data.user?.username
+                    || data.user?.result
+                    || data.user?.value
+                    || data.username
+                    || null;
+
+                if (username) {
+                    const fallbackProfile = { username: String(username), roles: [] };
+                    authorProfileCache.set(key, fallbackProfile);
+                    return fallbackProfile;
+                }
+            } catch {
+                const defaultProfile = { username: `user-${authorId}`, roles: [] };
+                authorProfileCache.set(key, defaultProfile);
+                return defaultProfile;
+            }
+
+            const defaultProfile = { username: `user-${authorId}`, roles: [] };
+            authorProfileCache.set(key, defaultProfile);
+            return defaultProfile;
+        }
+
+        async function loadNotes() {
+            try {
+                const data = await apiRequest(
+                    "/notes/search?offset=0&limit=100",
+                    {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({})
+                    },
+                    "Failed to load notes"
+                );
+
+                const notes = Array.isArray(data.note_query) ? data.note_query.slice() : [];
+                notes.sort((a, b) => {
+                    const aTs = Date.parse(getNoteDate(a) || "1970-01-01T00:00:00Z");
+                    const bTs = Date.parse(getNoteDate(b) || "1970-01-01T00:00:00Z");
+                    return bTs - aTs;
+                });
+
+                const authorIds = [...new Set(notes.map((n) => n.author_id).filter(Boolean))];
+                await Promise.all(authorIds.map((id) => getAuthorProfile(id)));
+
+                if (notes.length === 0) {
+                    notesList.innerHTML = "<p style='color:#999;text-align:center;'>No notes yet. Create one!</p>";
+                    return;
+                }
+
+                notesList.innerHTML = notes.map((note) => {
+                    const privateBadge = noteIsPrivate(note) ? "<span class='note-private-pill'>PRIVATE</span>" : "";
+                    const containerClass = noteIsPrivate(note) ? "note-item private" : "note-item";
+                    const dt = getNoteDate(note);
+                    const when = dt ? new Date(dt).toLocaleString() : "Unknown time";
+                    const noteId = getNoteId(note);
+                    const authorId = note.author_id;
+                    const authorProfile = authorProfileCache.get(String(authorId)) || { username: `user-${authorId}`, roles: [] };
+                    const authorName = authorProfile.username;
+                    const authorRoles = normalizeRoles(authorProfile.roles);
+                    const deleteBtn = canDeleteNote(note)
+                        ? `<div class='note-actions'><button class='danger-btn' type='button' onclick='deleteNote(${Number(noteId)})'>Delete</button></div>`
+                        : "";
+
+                    let roleBadge = "";
+                    let roleClass = "";
+                    if (authorRoles.includes("owner")) {
+                        roleBadge = "<span class='note-role-pill owner'>👑 OWNER</span>";
+                        roleClass = " owner-note";
+                    } else if (authorRoles.includes("admin")) {
+                        roleBadge = "<span class='note-role-pill admin'>🛡 ADMIN</span>";
+                        roleClass = " admin-note";
+                    }
+
+                    return `
+                        <div class="${containerClass}${roleClass}">
+                            <h4>${escapeHtml(note.title || "Untitled")}${privateBadge}${roleBadge}</h4>
+                            <p>${escapeHtml(note.content || "").replace(/\n/g, "<br>")}</p>
+                            <div class="note-meta">${escapeHtml(authorName)} | ${escapeHtml(when)}</div>
+                            ${deleteBtn}
+                        </div>
+                    `;
+                }).join("");
+            } catch (error) {
+                notesList.innerHTML = `<p style='color:#c00;'>Error loading notes: ${escapeHtml(error.message)}</p>`;
+            }
+        }
+
+        async function createNote(title, content, isPrivate) {
+            try {
+                const me = currentUser();
+                if (!getUserId(me)) {
+                    await fetchCurrentUser();
+                }
+
+                const user = currentUser();
+                const resolvedUserId = getUserId(user);
+                if (!resolvedUserId) {
+                    throw new Error("Unable to resolve current user id. Please log in again.");
+                }
+
+                await apiRequest(
+                    "/notes/",
+                    {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            author_id: Number(resolvedUserId),
+                            title,
+                            content,
+                            flags: isPrivate ? ["private"] : []
+                        })
+                    },
+                    "Failed to create note"
+                );
+
+                showMessage(noteMessage, "Note posted successfully!", "success");
+                document.getElementById("noteTitle").value = "";
+                document.getElementById("noteContent").value = "";
+                notePrivate.checked = false;
+                await loadNotes();
+                setActiveTab("wall");
+            } catch (error) {
+                showMessage(noteMessage, `Error: ${error.message}`, "error");
+            }
+        }
+
+        async function deleteNote(noteId) {
+            try {
+                await apiRequest(`/notes/${noteId}`, { method: "DELETE" }, "Failed to delete note");
+                showMessage(noteMessage, "Note deleted", "success");
+                await loadNotes();
+            } catch (error) {
+                showMessage(noteMessage, `Error: ${error.message}`, "error");
+            }
+        }
+
+        async function loadUsersForAdmin() {
+            if (!isAdmin()) {
+                usersList.innerHTML = "";
+                return;
+            }
+
+            try {
+                const data = await apiRequest(
+                    "/users/search?offset=0&limit=100",
+                    {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({})
+                    },
+                    "Failed to load users"
+                );
+
+                const users = Array.isArray(data.user_query) ? data.user_query : [];
+                if (users.length === 0) {
+                    usersList.innerHTML = "<p style='color:#999;'>No users found.</p>";
+                    return;
+                }
+
+                usersList.innerHTML = users.map((u) => {
+                    const uid = getUserId(u);
+                    const roles = normalizeRoles(u.roles);
+                    const roleValue = escapeHtml(roles.join(","));
+                    return `
+                        <div class="user-card">
+                            <p><strong>ID:</strong> ${escapeHtml(uid)}</p>
+                            <p><strong>Username:</strong> ${escapeHtml(u.username || "N/A")}</p>
+                            <p><strong>Email:</strong> ${escapeHtml(u.email || "N/A")}</p>
+                            <p><strong>Roles:</strong> ${escapeHtml(roles.join(", ") || "none")}</p>
+                            <div class="user-actions">
+                                <input class="small-input" id="roles-${escapeHtml(uid)}" value="${roleValue}" placeholder="comma separated roles (owner,admin,moderator,user,banned)">
+                                <button type="button" onclick="updateUserRoles(${Number(uid)})">Update Roles</button>
+                                <button class="danger-btn" type="button" onclick="deleteUser(${Number(uid)})">Delete User</button>
+                            </div>
+                        </div>
+                    `;
+                }).join("");
+            } catch (error) {
+                usersList.innerHTML = `<p style='color:#c00;'>Error loading users: ${escapeHtml(error.message)}</p>`;
+            }
+        }
+
+        async function loadWallOfShame() {
+            try {
+                const data = await apiRequest(
+                    "/users/search?offset=0&limit=100",
+                    {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({})
+                    },
+                    "Failed to load wall of shame"
+                );
+
+                const users = Array.isArray(data.user_query) ? data.user_query : [];
+                const bannedUsers = users.filter((u) => normalizeRoles(u.roles).includes("banned"));
+
+                if (bannedUsers.length === 0) {
+                    bannedUsersList.innerHTML = "<p style='color:#9eb0dc;'>No banned users right now.</p>";
+                    return;
+                }
+
+                bannedUsersList.innerHTML = bannedUsers.map((u) => {
+                    const uid = getUserId(u);
+                    const roles = normalizeRoles(u.roles);
+                    return `
+                        <div class="user-card" style="border-left:4px solid var(--danger);">
+                            <p><strong>ID:</strong> ${escapeHtml(uid)}</p>
+                            <p><strong>Username:</strong> ${escapeHtml(u.username || "N/A")}</p>
+                            <p><strong>Email:</strong> ${escapeHtml(u.email || "N/A")}</p>
+                            <p><strong>Roles:</strong> ${escapeHtml(roles.join(", ") || "none")}</p>
+                        </div>
+                    `;
+                }).join("");
+            } catch (error) {
+                bannedUsersList.innerHTML = `<p style='color:#c00;'>Error loading wall of shame: ${escapeHtml(error.message)}</p>`;
+            }
+        }
+
+        async function updateUserRoles(userId) {
+            const rolesInput = document.getElementById(`roles-${userId}`);
+            const roleList = rolesInput.value
+                .split(",")
+                .map((x) => x.trim())
+                .filter(Boolean);
+
+            try {
+                await apiRequest(
+                    "/users/roles",
+                    {
+                        method: "PUT",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ user_id: userId, new_roles: roleList })
+                    },
+                    "Failed to update user roles"
+                );
+                showMessage(adminMessage, `Updated roles for user ${userId}`, "success");
+                await fetchCurrentUser();
+                await loadUsersForAdmin();
+            } catch (error) {
+                showMessage(adminMessage, `Error: ${error.message}`, "error");
+            }
+        }
+
+        async function deleteUser(userId) {
+            const me = currentUser();
+            if (Number(getUserId(me)) === Number(userId)) {
+                showMessage(adminMessage, "Error: You cannot delete your own account from this panel.", "error");
+                return;
+            }
+
+            try {
+                await apiRequest(`/users/${userId}`, { method: "DELETE" }, "Failed to delete user");
+                showMessage(adminMessage, `Deleted user ${userId}`, "success");
+                await loadUsersForAdmin();
+            } catch (error) {
+                showMessage(adminMessage, `Error: ${error.message}`, "error");
+            }
+        }
+
+        async function login(username, password) {
+            try {
+                const data = await apiRequest(
+                    "/users/login",
+                    {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ username, password })
+                    },
+                    "Login failed"
+                );
+
+                const token = data.user?.token || data.user?.access_token || data.user?.jwt;
+                if (!token) {
+                    throw new Error("No token received");
+                }
+
+                setToken(token);
+                setStoredUser({ username });
+                await fetchCurrentUser();
+                await loadNotes();
+                await loadUsersForAdmin();
+                await loadWallOfShame();
+                showMessage(loginMessage, "Login successful!", "success");
+                setActiveTab("wall");
+            } catch (error) {
+                showMessage(loginMessage, `Error: ${error.message}`, "error");
+            }
+        }
+
+        async function signup(username, email, password) {
+            try {
+                const data = await apiRequest(
+                    "/users/",
+                    {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ username, email, password })
+                    },
+                    "Signup failed"
+                );
+
+                const token = data.user?.token || data.user?.access_token || data.user?.jwt;
+                if (!token) {
+                    throw new Error("No token received");
+                }
+
+                setToken(token);
+                setStoredUser(data.user || { username, email });
+                await fetchCurrentUser();
+                await loadNotes();
+                await loadUsersForAdmin();
+                await loadWallOfShame();
+                showMessage(signupMessage, "Account created successfully!", "success");
+                setActiveTab("wall");
+            } catch (error) {
+                showMessage(signupMessage, `Error: ${error.message}`, "error");
+            }
+        }
+
+        // Global for inline button handlers
+        window.deleteNote = deleteNote;
+        window.updateUserRoles = updateUserRoles;
+        window.deleteUser = deleteUser;
+
+        // Event listeners
+        loginBtn.addEventListener("submit", (e) => {
+            e.preventDefault();
+            login(
+                document.getElementById("loginUsername").value,
+                document.getElementById("loginPassword").value
+            );
+        });
+
+        signupBtn.addEventListener("submit", (e) => {
+            e.preventDefault();
+            signup(
+                document.getElementById("signupUsername").value,
+                document.getElementById("signupEmail").value,
+                document.getElementById("signupPassword").value
+            );
+        });
+
+        noteForm.addEventListener("submit", (e) => {
+            e.preventDefault();
+            createNote(
+                document.getElementById("noteTitle").value,
+                document.getElementById("noteContent").value,
+                notePrivate.checked
+            );
+        });
+
+        logoutBtn.addEventListener("click", () => {
+            clearToken();
+            showUnauthenticated();
+            notesList.innerHTML = "";
+            usersList.innerHTML = "";
+            bannedUsersList.innerHTML = "";
+            setActiveTab("post");
+        });
+
+        switchToSignup.addEventListener("click", showSignup);
+        switchToLogin.addEventListener("click", showLogin);
+
+        tabPost.addEventListener("click", () => setActiveTab("post"));
+        tabWall.addEventListener("click", async () => {
+            setActiveTab("wall");
+            if (hasToken()) {
+                await loadNotes();
+            }
+        });
+        tabWallOfShame.addEventListener("click", async () => {
+            setActiveTab("wallOfShame");
+            if (hasToken()) {
+                await loadWallOfShame();
+            }
+        });
+        tabManageUsers.addEventListener("click", async () => {
+            setActiveTab("users");
+            await loadUsersForAdmin();
+        });
+
+        // Initialize
+        async function init() {
+            if (hasToken()) {
+                try {
+                    await fetchCurrentUser();
+                    await loadNotes();
+                    await loadUsersForAdmin();
+                    await loadWallOfShame();
+                    setActiveTab("wall");
+                } catch (error) {
+                    clearToken();
+                    showUnauthenticated();
+                }
+            }
+        }
+
+        init();
+    </script>
+</body>
+</html>

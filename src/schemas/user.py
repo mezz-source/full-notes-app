@@ -47,11 +47,16 @@ class SearchUser(BaseModel):
     username_contains: str | None = None
 class AddRole(BaseModel):
     user_id: int
-    role: str
+    roles: List[str]
 
 class UpdateRoles(BaseModel):
     user_id: int
     new_roles: List[str]
 class RemoveRole(BaseModel):
     user_id: int
-    role: str
+    roles: List[str]
+
+class UserLogin(BaseModel):
+    username: str | None = None
+    email: EmailStr | None = None
+    password: str

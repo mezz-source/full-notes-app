@@ -14,6 +14,7 @@ from src.schemas.note import CreateNote, ModifyNote, SearchNote, AddNoteFlag, Re
 import src.schemas.core.note as NoteCore
 from src.core.services.notes_service import NoteService
 from src.repositories.note_repo import NoteRepository
+from src.security.authentication import get_current_user
 
 router = APIRouter(prefix="/notes")
 
@@ -29,37 +30,37 @@ def root():
     return PlainTextResponse("this is the notes root!")
     # return await service.get_note(GetNote(note_id=note_id))
 
-@router.get("/search")
+@router.post("/search")
 async def query_notes(
     note_query: SearchNote, offset: int = 0, limit: int = Query(default=100, le=100), \
-        service: NoteService = Depends(get_note_service)):
-    return await handle_request(DEFAULT_QUERY_HEADER, NoteCore.NoteQuery, service.query_notes, \
+        service: NoteService = Depends(get_note_service), current_user: dict = Depends(get_current_user)):
+    return await handle_request(DEFAULT_QUERY_HEADER, current_user, NoteCore.NoteQuery, service.query_notes, \
                                 **note_query.model_dump(), offset=offset, limit=limit)
 
 @router.post("/flags")
-async def add_note_flag(request: AddNoteFlag, service: NoteService = Depends(get_note_service)):
-    return await handle_request(DEFAULT_HEADER, NoteCore.AddNoteFlag, service.add_flag, **request.model_dump())
+async def add_note_flag(request: AddNoteFlag, service: NoteService = Depends(get_note_service), current_user: dict = Depends(get_current_user)):
+    return await handle_request(DEFAULT_HEADER, current_user, NoteCore.AddNoteFlag, service.add_flag, **request.model_dump())
 
 @router.delete("/flags")
-async def remove_note_flag(request: RemoveNoteFlag, service: NoteService = Depends(get_note_service)):
-    return await handle_request(DEFAULT_HEADER, NoteCore.RemoveNoteFlag, service.remove_flag, **request.model_dump())
+async def remove_note_flag(request: RemoveNoteFlag, service: NoteService = Depends(get_note_service), current_user: dict = Depends(get_current_user)):
+    return await handle_request(DEFAULT_HEADER, current_user, NoteCore.RemoveNoteFlag, service.remove_flag, **request.model_dump())
 
 @router.patch("/flags")
-async def update_note_flags(request: UpdateNoteFlags, service: NoteService = Depends(get_note_service)):
-    return await handle_request(DEFAULT_HEADER, NoteCore.UpdateNoteFlags, service.update_flags, **request.model_dump())
+async def update_note_flags(request: UpdateNoteFlags, service: NoteService = Depends(get_note_service), current_user: dict = Depends(get_current_user)):
+    return await handle_request(DEFAULT_HEADER, current_user, NoteCore.UpdateNoteFlags, service.update_flags, **request.model_dump())
 
 @router.get("/{note_id}")
-async def get_note(note_id: int, service: NoteService = Depends(get_note_service)):
-    return await handle_request(DEFAULT_HEADER, NoteCore.GetNote, service.get_note, note_id=note_id)
+async def get_note(note_id: int, service: NoteService = Depends(get_note_service), current_user: dict = Depends(get_current_user)):
+    return await handle_request(DEFAULT_HEADER, current_user, NoteCore.GetNote, service.get_note, note_id=note_id)
 
 @router.delete("/{note_id}")
-async def delete_note(note_id: int, service: NoteService = Depends(get_note_service)):
-    return await handle_request(DEFAULT_HEADER, NoteCore.DeleteNote, service.delete_note, note_id=note_id)
+async def delete_note(note_id: int, service: NoteService = Depends(get_note_service), current_user: dict = Depends(get_current_user)):
+    return await handle_request(DEFAULT_HEADER, current_user, NoteCore.DeleteNote, service.delete_note, note_id=note_id)
 
 @router.patch("/")
-async def modify_note(request: ModifyNote, service: NoteService = Depends(get_note_service)):
-    return await handle_request(DEFAULT_HEADER, NoteCore.ModifyNote, service.modify_note, **request.model_dump())
+async def modify_note(request: ModifyNote, service: NoteService = Depends(get_note_service), current_user: dict = Depends(get_current_user)):
+    return await handle_request(DEFAULT_HEADER, current_user, NoteCore.ModifyNote, service.modify_note, **request.model_dump())
 
 @router.post("/")
-async def create_note(request: CreateNote, service: NoteService = Depends(get_note_service)):
-    return await handle_request(DEFAULT_HEADER, NoteCore.CreateNote, service.create_note, **request.model_dump())
+async def create_note(request: CreateNote, service: NoteService = Depends(get_note_service), current_user: dict = Depends(get_current_user)):
+    return await handle_request(DEFAULT_HEADER, current_user, NoteCore.CreateNote, service.create_note, **request.model_dump())

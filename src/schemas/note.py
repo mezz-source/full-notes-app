@@ -7,14 +7,14 @@ class Note(BaseModel):
     author_id: int
     title: str
     content: str
-    time_written: datetime
+    posted_at: datetime
     flags: str
 
 class CreateNote(BaseModel):
     author_id: int
     title: str
     content: str
-    flags: str
+    flags: list[str] = [""]
 
 class DeleteNote(BaseModel):
     note_id: int
@@ -25,15 +25,15 @@ class ModifyNote(BaseModel):
 
 class AddNoteFlag(BaseModel):
     note_id: int
-    flag: str
+    flags: list[str]
 
 class RemoveNoteFlag(BaseModel):
     note_id: int
-    flag: str
+    flags: list[str]
 
 class UpdateNoteFlags(BaseModel):
     note_id: int
-    new_flags: str
+    new_flags: list[str]
 
 class SearchNote(BaseModel):
     note_id: int | None = None
@@ -41,4 +41,4 @@ class SearchNote(BaseModel):
     title: str | None = None
     title_contains: str | None = None
     content_contains: str | None = None
-    tag: str | None = None
+    flags: str | None = None
