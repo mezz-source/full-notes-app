@@ -1,13 +1,23 @@
 from datetime import datetime, timedelta
+import os
+from pathlib import Path
 from fastapi import Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer
+from dotenv import load_dotenv
 from jose import jwt, JWTError
 from sqlalchemy.orm import Session
 from src.db.session import get_db
 from src.util.responses import model_to_dict as model_to_dict_async
 from src.repositories.user_repo import UserRepository
 
-SECRET_KEY = "itsmezzintime" # make this a env variable in production
+# Load environment variables from project root .env file.
+load_dotenv(Path(__file__).resolve().parents[2] / ".env")
+
+secret_key = os.getenv("SECRET_KEY")
+if not secret_key:
+    raise RuntimeError("SECRET_KEY is not set. Add it to the .env file.")
+SECRET_KEY = secret_key
+
 ALGORITHM = "HS256"
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
