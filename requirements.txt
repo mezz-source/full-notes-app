@@ -10,15 +10,17 @@ fastapi==0.135.1
 fastapi-pagination==0.15.11
 greenlet==3.3.2
 h11==0.16.0
+httptools==0.7.1
 idna==3.11
 msgspec==0.20.0
 packaging==26.0
 pyasn1==0.6.3
 pydantic==2.12.5
 pydantic_core==2.41.5
-python-dotenv==1.1.1
 python-dateutil==2.9.0.post0
+python-dotenv==1.2.2
 python-jose==3.5.0
+PyYAML==6.0.3
 rsa==4.9.1
 six==1.17.0
 sqlakeyset==2.0.1762907931
@@ -27,3 +29,5 @@ starlette==0.52.1
 typing-inspection==0.4.2
 typing_extensions==4.15.0
 uvicorn==0.42.0
+watchfiles==1.1.1
+websockets==16.0

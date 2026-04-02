@@ -10,7 +10,7 @@ from src.db.session import get_db
 from sqlalchemy.orm import Session
 
 # Schema related
-from src.schemas.user import CreateUser, ModifyUser, SearchUser, AddRole, RemoveRole, UpdateRoles, UserLogin
+from src.schemas.user import CreateUser, ModifyUser, SearchUser, AddRole, RemoveRole, UpdateRoles, UserLogin, BanUser
 
 # Service/Core related
 import src.schemas.core.user as UserCore
@@ -36,6 +36,11 @@ async def root():
 @router.post("/login")
 async def login(request: UserLogin, service: UserService = Depends(get_user_service)):
     return await handle_request(DEFAULT_HEADER, None, UserCore.Login, service.login, **request.model_dump())
+
+@router.post("/ban")
+async def ban_user(request: BanUser, service: UserService = Depends(get_user_service) \
+                    , current_user: dict = Depends(get_current_user)):
+    return await handle_request(DEFAULT_HEADER, current_user, UserCore.BanUser, service.ban_user, **request.model_dump())
 
 @router.post("/")
 async def create_user(request: CreateUser, service: UserService = Depends(get_user_service) 

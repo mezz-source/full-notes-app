@@ -55,7 +55,9 @@ class UpdateRoles(BaseModel):
 class RemoveRole(BaseModel):
     user_id: int
     roles: List[str]
-
+class BanUser(BaseModel):
+    user_id: int
+    reason: str
 class UserLogin(BaseModel):
     username: str | None = None
     email: EmailStr | None = None

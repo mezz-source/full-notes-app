@@ -4,7 +4,7 @@ from sqlalchemy.exc import IntegrityError
 from src.util.key import validate as validate_keys
 from src.security.hash import hash_password
 from src.schemas.core.user import MUTABLE_USER_KEYS, VALID_ROLES, GetUser, CreateUser, \
-    DeleteUser, GetUserUsername, ModifyUser, UserQuery, AddRole, RemoveRole, UpdateRoles, Login
+    DeleteUser, GetUserUsername, ModifyUser, UserQuery, AddRole, RemoveRole, UpdateRoles, Login, BanUser
 from src.schemas.core.request import Error, Result
 from sqlalchemy.orm import Session
 from src.security.authentication import create_access_token, get_user_dict, async_create_access_token
@@ -211,6 +211,26 @@ class UserService():
         user_data = await model_to_dict(result)
         return Result("SUCCESS", f"Roles for user with ID {user_id} was updated", user_data, 200)
     
+    async def ban_user(self, data: BanUser, acting_user: dict | None = None) -> Result | Error:
+        if not acting_user:
+            return Error("UNAUTHORIZED", "Authentication required to ban user", 401)
+
+        target_user_model = await self.user_repo.get(data.user_id)
+        if not target_user_model:
+            return Error("NOT_FOUND", f"User with ID {data.user_id} was not found", 404)
+
+        target_user = await model_to_dict(target_user_model)
+        if not await can_ban_user(acting_user, target_user):
+            return Error("FORBIDDEN", "You do not have permission to ban this user", 403)
+
+        existing_roles = await parse_string_list(target_user.get("roles")) # type: ignore
+        if "banned" in existing_roles:
+            return Error("ALREADY_BANNED", f"User with ID {data.user_id} is already banned", 422)
+        
+        result = await self.user_repo.modify(data.user_id, {"roles": "banned"})
+        user_data = await model_to_dict(result)
+        return Result("SUCCESS", f"User with ID {data.user_id} was banned for reason: {data.reason}", user_data, 200)
+
     async def modify_user(self, data: ModifyUser, acting_user: dict | None = None) -> Result | Error:
         if not acting_user:
             return Error("UNAUTHORIZED", "Authentication required to modify user", 401)

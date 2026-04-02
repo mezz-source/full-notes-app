@@ -50,3 +50,7 @@ class Login(msgspec.Struct):
     password: str
     username: str | None = None
     email: str | None = None
+
+class BanUser(msgspec.Struct):
+    user_id: int
+    reason: str
